@@ -1,15 +1,19 @@
-FROM node:18-alpine
+FROM node:16
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY package.json ./
+COPY tsconfig.json ./
+COPY jest.config.js ./
+COPY babel.config.js ./
 
 RUN npm install
 
-COPY . .
+COPY src/ ./src/
+COPY tests/ ./tests/
 
 RUN npm run build
 
 EXPOSE 3000
 
-CMD ["node", "dist/app.js"]
+CMD ["npm", "start"]

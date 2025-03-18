@@ -7,16 +7,17 @@ services:
 
   tweed:
     build: .
-    container_name: tweed-app
+    container_name: tweed-app-test
     environment:
       - NODE_ENV=test
-      - PORT=3000
+      - PORT=3001
       - REDIS_PORT=6379
       - REDIS_HOST=redis
-      - STANDARD_TIER_RATE_LIMIT=500
-      - HIGH_TIER_RATE_LIMIT=1000
-      - SLIDING_WINDOW_TIME_IN_SEC=60
+      - STANDARD_TIER_RATE_LIMIT=5
+      - HIGH_TIER_RATE_LIMIT=30
+      - SLIDING_WINDOW_TIME_IN_SEC=10
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       - redis
+    command: ["sh", "-c", "npm test"]

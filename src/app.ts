@@ -2,11 +2,11 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import someRoutes from './routes/some.route';
-import { rateLimiter } from './middlewares/rateLimiter.middleware';
 import config from './config';
+import { rateLimiter } from './middlewares/rateLimiter.middleware';
 
 const app = express();
-const port = config.server.port;
+const port = config.server.port; // process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 app.use(cors());
