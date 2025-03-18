@@ -11,10 +11,12 @@ const port = config.server.port; // process.env.PORT || 3000;
 app.use(bodyParser.json());
 app.use(cors());
 
+// rate limit middleware to intercept every request reaching the web server
 app.use(rateLimiter);
 
 app.use('/api/request', someRoutes);
 
+// error interceptor
 app.use((err: any, req: any, res: any, next: any) => {
     res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
