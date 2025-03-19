@@ -1,22 +1,38 @@
 services:
-  redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-      - "6379:6379"
+    redis:
+        image: redis:latest
+        container_name: redis
+        ports:
+            - "6379:6379"
 
-  tweed:
-    build: .
-    container_name: tweed-app
-    environment:
-      - NODE_ENV=test
-      - PORT=3000
-      - REDIS_PORT=6379
-      - REDIS_HOST=redis
-      - STANDARD_TIER_RATE_LIMIT=500
-      - HIGH_TIER_RATE_LIMIT=1000
-      - SLIDING_WINDOW_TIME_IN_SEC=60
-    ports:
-      - "3000:3000"
-    depends_on:
-      - redis
+    tweed-1:
+        build: .
+        container_name: tweed-app-instance-1
+        environment:
+            - NODE_ENV=production
+            - PORT=3000
+            - REDIS_PORT=6379
+            - REDIS_HOST=redis
+            - STANDARD_TIER_RATE_LIMIT=500
+            - HIGH_TIER_RATE_LIMIT=1000
+            - SLIDING_WINDOW_TIME_IN_SEC=60
+        ports:
+            - "3000:3000"
+        depends_on:
+            - redis
+
+    tweed-2:
+        build: .
+        container_name: tweed-app-instance-2
+        environment:
+            - NODE_ENV=production
+            - PORT=3001
+            - REDIS_PORT=6379
+            - REDIS_HOST=redis
+            - STANDARD_TIER_RATE_LIMIT=500
+            - HIGH_TIER_RATE_LIMIT=1000
+            - SLIDING_WINDOW_TIME_IN_SEC=60
+        ports:
+            - "3001:3001"
+        depends_on:
+            - redis

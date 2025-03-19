@@ -10,28 +10,39 @@ This web server implements a scalable rate limiter that uses Redis to manage req
 ## Running the Tweed App
 
 1. Clone the repository
-2. Run the following command to start the web server:
+2. Build and start the services using Docker Compose::
     ```bash
     docker compose up --build
     ```
-3. The web server will be available at `http://localhost:3000`.
-4. To Stop the app run:
+3. The first web server will be available at `http://localhost:3000`.
+4. The second web server will be available at `http://localhost:3001`.
+5. To Stop the services run:
     ```bash
     docker compose down
     ```
 
-## Running Tests
+**Scaling the Service:**
+To scale the number of tweed instances, simply modify the docker-compose.yml file to add more instances. For example:
 
-1. Run the following command to run the tests in the test evironment:
-    ```bash
-    docker compose -f docker-compose.test.yml run --build tweed-test npm run test
-    ```
-2. To stop the test app run:
-    ```bash
-    docker compose -f docker-compose.test.yml down
-    ```
+```yaml
+  tweed-3:
+    build: .
+    container_name: tweed-app-instance-3
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - REDIS_PORT=6379
+      - REDIS_HOST=redis
+      - STANDARD_TIER_RATE_LIMIT=500
+      - HIGH_TIER_RATE_LIMIT=1000
+      - SLIDING_WINDOW_TIME_IN_SEC=60
+    ports:
+      - "3002:3002"
+    depends_on:
+      - redis
+```
 
-## Rate Limiting Logic
+**Rate Limiting Logic:**
 
 - High tier: 1000 requests per minute.
 - Standard tier: 500 requests per minute.
@@ -47,4 +58,16 @@ This web server implements a scalable rate limiter that uses Redis to manage req
     curl -X POST http://localhost:3000/api/request \
         -H "Content-Type: application/json" \
         -d '{"userId": "user1", "userTier": "standard"}'
+    ```
+
+
+## Running Tests
+
+1. Run the following command to run the tests in the test evironment:
+    ```bash
+    docker compose -f docker-compose.test.yml run --build tweed-test npm run test
+    ```
+2. To stop the test app run:
+    ```bash
+    docker compose -f docker-compose.test.yml down
     ```
