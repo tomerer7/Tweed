@@ -24,7 +24,7 @@ This web server implements a scalable rate limiter that uses Redis to manage req
 
 1. Run the following command to run the tests in the test evironment:
     ```bash
-    docker compose -f docker-compose.test.yml run tweed-test npm run test
+    docker compose -f docker-compose.test.yml run --build tweed-test npm run test
     ```
 2. To stop the test app run:
     ```bash
@@ -33,8 +33,11 @@ This web server implements a scalable rate limiter that uses Redis to manage req
 
 ## Rate Limiting Logic
 
-- High tier: 1000 requests per minute. (50 for tests)
-- Standard tier: 500 requests per minute. (10 for tests)
+- High tier: 1000 requests per minute.
+- Standard tier: 500 requests per minute.
+
+- Test's High tier: 50 requests per 5 seconds.
+- Test's Standard tier: 10 requests per 5 seconds.
 
 
 **Example Usage:**

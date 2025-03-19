@@ -15,7 +15,7 @@ services:
       - REDIS_HOST=redis
       - STANDARD_TIER_RATE_LIMIT=10
       - HIGH_TIER_RATE_LIMIT=50
-      - SLIDING_WINDOW_TIME_IN_SEC=10
+      - SLIDING_WINDOW_TIME_IN_SEC=5
     ports:
       - "3001:3000"
     depends_on:
