@@ -1,7 +1,5 @@
 import request from 'supertest';
 import app from '../src/app';
-import config from '../src/config';
-
 
 describe('Rate Limiter Service', () => {
     afterAll(async () => {
@@ -10,7 +8,7 @@ describe('Rate Limiter Service', () => {
 
     it('Allows requests within the standard tier limit', async () => {
         const promises: any[] = [];
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 8; i++) {
             promises.push(request(app).post('/api/request').send({ userId: 'user1', userTier: 'standard' }))
         }
         await Promise.all(promises);
@@ -20,7 +18,7 @@ describe('Rate Limiter Service', () => {
 
     it('Blocks requests exceeding standrad tier limit', async () => {
         const promises: any[] = [];
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 10; i++) {
             promises.push(request(app).post('/api/request').send({ userId: 'user2', userTier: 'standard' }))
         }
         await Promise.all(promises);
@@ -40,7 +38,7 @@ describe('Rate Limiter Service', () => {
 
     it('Blocks requests exceeding high tier limit', async () => {
         const promises: any[] = [];
-        for (let i = 0; i < 31; i++) {
+        for (let i = 0; i < 50; i++) {
             promises.push(request(app).post('/api/request').send({ userId: 'user4', userTier: 'high' }))
         }
         await Promise.all(promises);

@@ -1,9 +1,10 @@
+import { v4 as uuidv4 } from 'uuid';
 import config from '../config';
+import redis from '../redisClient';
+import logger from '../utils/Logger';
 import { UserTier } from '../utils/interfaces';
 import { BadRequestError, TooManyRequestsError } from '../utils/httpError';
 import { asyncHandler } from '../utils/asyncHandler';
-import redis from '../redisClient';
-import logger from '../utils/Logger';
 
 export const rateLimiter = asyncHandler(async (req: any, res: any, next: any) => {
     const userId = req.body.userId;
@@ -15,27 +16,32 @@ export const rateLimiter = asyncHandler(async (req: any, res: any, next: any) =>
     }
 
     const rateLimitConfig = config.rateLimit[userTier];
+    if (!rateLimitConfig) {
+        logger.error(`Invalid user tier ${JSON.stringify({ userId, userTier })}`);
+        throw new BadRequestError("Invalid user tier");
+    }
+    
+    // decided to use sliding window algorithm as it more fair and accurate and more important, it prevents burst requests at window edges
+    // using zset is better in terms of performance but has higher memory usage than list
     const key = `rate_limit:${userTier}:${userId}`;
     const now = Date.now();
 
+    // remove older timestamps outside the window
+    await redis.zremrangebyscore(key, 0, now - rateLimitConfig.slidingWindowTimeInSec * 1000);
 
-    // decided to use sliding window algorithm as it more fair and accurate and more important it prevents burst requests at window edges
-    const timestamps: string[] = await redis.lrange(key, 0, -1);
+    const requestCount = await redis.zcard(key);
 
-    const validTimestamps = timestamps.filter((timestamp) => {
-        return now - parseInt(timestamp) <= rateLimitConfig.slidingWindowTimeInSec * 1000;
-    });
-
-    if (validTimestamps.length >= rateLimitConfig.maxRequests) {
-        logger.error("Rate limit exceeded");
+    if (requestCount >= rateLimitConfig.maxRequests) {
+        logger.error(`Rate limit exceeded ${JSON.stringify({ userId, userTier })}`);
         throw new TooManyRequestsError();
     }
 
-    await redis.lpush(key, now.toString());
+    // add timestamp to the sorted set. members are uniques so it must have a uniqueId(using just timestamp is not enough as multiple requests can arrive at the same time)
+    const uniqueMemberId = `${now}-${uuidv4()}`
+    await redis.zadd(key, now, `${uniqueMemberId}`);
 
-    await redis.ltrim(key, 0, rateLimitConfig.maxRequests - 1);
-
-    await redis.expire(key, Math.ceil(rateLimitConfig.slidingWindowTimeInSec * 1000));
+    // add TTL(to clean the cache when user doesn't make any request for a while)
+    await redis.expire(key, rateLimitConfig.slidingWindowTimeInSec);
 
     next();
 });
